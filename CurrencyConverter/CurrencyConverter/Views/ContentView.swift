@@ -24,14 +24,51 @@ struct ContentView: View {
     @State private var conversionHistory: [ConversionEntry] = []
     @FocusState private var fieldIsFocused: Bool
     
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+    private let currencies: [Currency] = [.rub, .usd, .eur, .gbp, .chf, .cny]
+    
+    var convertedAmount: Double {
+        guard let sourceRate = currencyRates[selectedSourceCurrency.rawValue],
+              let targetRate = currencyRates[selectedTargetCurrency.rawValue],
+              let amount = Double(sourceAmount) else {
+            return 0.0
         }
-        .padding()
+        
+        return (amount / sourceRate) * targetRate
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(header: Text("Source")) {
+                    Picker("Source Currency", selection: $selectedSourceCurrency) {
+                        ForEach(currencies, id:\.self) { currency in
+                            Text(currency.rawValue)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    TextField("Amount", text: $sourceAmount).focused($fieldIsFocused)
+                        .keyboardType(.decimalPad)
+                }
+                
+                Section(header: Text("Target")) {
+                    Picker("Target Currency", selection: $selectedTargetCurrency) {
+                        ForEach(currencies, id: \.self) { currency in
+                            Text(currency.rawValue)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    Text("Converted Amount: \(convertedAmount, specifier: "%.2f") \(selectedTargetCurrency.rawValue)")
+                }
+                
+                Button("Add to History", action: addToHistory)
+            }
+        }
+    }
+    
+    func addToHistory() {
+        let entry = ConversionEntry(sourceCurrency: selectedSourceCurrency, targetCurrency: selectedTargetCurrency, sourceAmount: Double(sourceAmount) ?? 0, convertedAmount: convertedAmount, timestamp: Date())
+        
+        conversionHistory.insert(entry, at: 0)
     }
 }
 
