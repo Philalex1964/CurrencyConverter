@@ -7,21 +7,14 @@
 
 import SwiftUI
 
-enum Currency: String, CaseIterable {
-    case rub = "RUB"
-    case usd = "USD"
-    case eur = "EUR"
-    case gbp = "GBP"
-    case chf = "CHF"
-    case cny = "CNY"
-}
-
 struct ContentView: View {
     @State private var sourceAmount = ""
     @State private var selectedSourceCurrency = Currency.usd
     @State private var selectedTargetCurrency = Currency.rub
     @State private var currencyRates: [String: Double] = [:]
     @State private var conversionHistory: [ConversionEntry] = []
+//    @State private var viewModel = ViewModel()
+    
     @FocusState private var fieldIsFocused: Bool
     
     private let currencies: [Currency] = [.rub, .usd, .eur, .gbp, .chf, .cny]
@@ -62,6 +55,15 @@ struct ContentView: View {
                 
                 Button("Add to History", action: addToHistory)
             }
+            .navigationBarTitle("Currency Converter")
+            .onAppear {
+                fetchRates()
+                loadSelectedCurrencyPair()
+            }
+            .navigationBarItems(trailing:
+                                    NavigationLink(destination: ConversionHistoryView(conversionHistory: $conversionHistory)) {
+                Text("History")
+            })
         }
     }
     
@@ -69,6 +71,39 @@ struct ContentView: View {
         let entry = ConversionEntry(sourceCurrency: selectedSourceCurrency, targetCurrency: selectedTargetCurrency, sourceAmount: Double(sourceAmount) ?? 0, convertedAmount: convertedAmount, timestamp: Date())
         
         conversionHistory.insert(entry, at: 0)
+    }
+    
+    func fetchRates() {
+        CurrencyService.shared.fetchCurrencyRates { result in
+            switch result {
+            case .success(let rates):
+                DispatchQueue.main.async {
+                    self.currencyRates = rates
+                    saveCurrencyRatesLocally()
+                }
+            case .failure(let error):
+                print("Failed to fetch currency rates: \(error)")
+            }
+        }
+    }
+    
+    func saveCurrencyRatesLocally() {
+        UserDefaults.standard.set(currencyRates, forKey: "currencyRates")
+    }
+    
+    func loadSelectedCurrencyPair() {
+        if let sourceCurrencyRawValue = UserDefaults.standard.string(forKey: "sourceCurrency"),
+           let sourceCurrency = Currency(rawValue: sourceCurrencyRawValue),
+           let targetCurrencyRawValue = UserDefaults.standard.string(forKey: "targetCurrency"),
+           let targetCurrency = Currency(rawValue: targetCurrencyRawValue) {
+            selectedSourceCurrency = sourceCurrency
+            selectedTargetCurrency = targetCurrency
+        }
+    }
+    
+    func saveSelectedCurrencyPairLocally() {
+        UserDefaults.standard.set(selectedSourceCurrency.rawValue, forKey: "sourceCurrency")
+        UserDefaults.standard.set(selectedTargetCurrency.rawValue, forKey: "targetCurrency")
     }
 }
 
