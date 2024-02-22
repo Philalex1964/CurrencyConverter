@@ -13,7 +13,9 @@ struct ContentView: View {
     @State private var selectedTargetCurrency = Currency.rub
     @State private var currencyRates: [String: Double] = [:]
     @State private var conversionHistory: [ConversionEntry] = []
-//    @State private var viewModel = ViewModel()
+    @State private var timer: Timer? 
+    
+    //    @State private var viewModel = ViewModel()
     
     @FocusState private var fieldIsFocused: Bool
     
@@ -57,8 +59,9 @@ struct ContentView: View {
             }
             .navigationBarTitle("Currency Converter")
             .onAppear {
-                fetchRates()
+                loadCachedCurrencyRates()
                 loadSelectedCurrencyPair()
+                startRefreshTimer()
             }
             .onChange(of: selectedTargetCurrency) { _, _ in
                 saveSelectedCurrencyPairLocally()
@@ -73,10 +76,30 @@ struct ContentView: View {
         }
     }
     
+    private func startRefreshTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 21600, repeats: true) { _ in
+            fetchRates()
+        }
+    }
+    
+//    private func stopRefreshTimer() {
+//        timer?.invalidate()
+//        timer = nil
+//    }
+    
+    private func loadCachedCurrencyRates() {
+        if let cachedRates = UserDefaults.standard.dictionary(forKey: "currencyRates") as? [String: Double] {
+            self.currencyRates = cachedRates
+        } else {
+            fetchRates()
+        }
+    }
+    
     func addToHistory() {
         let entry = ConversionEntry(sourceCurrency: selectedSourceCurrency, targetCurrency: selectedTargetCurrency, sourceAmount: Double(sourceAmount) ?? 0, convertedAmount: convertedAmount, timestamp: Date())
         
         conversionHistory.insert(entry, at: 0)
+        fieldIsFocused = false
     }
     
     func fetchRates() {
@@ -95,6 +118,7 @@ struct ContentView: View {
     
     func saveCurrencyRatesLocally() {
         UserDefaults.standard.set(currencyRates, forKey: "currencyRates")
+        UserDefaults.standard.set(Date(), forKey: "cachedRatesTimestamp")
     }
     
     func loadSelectedCurrencyPair() {

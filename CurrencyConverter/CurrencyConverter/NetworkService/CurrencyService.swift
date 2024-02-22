@@ -9,7 +9,7 @@ import Foundation
 
 class CurrencyService {
     static let shared = CurrencyService()
-    private let apiKey = "fca_live_8rxirK8CEbm7c4eyf0z2yHQWB9sqa1xQHS8Bzfv0" // Replace "YOUR_API_KEY" with your actual API key
+    private let apiKey = "fca_live_8rxirK8CEbm7c4eyf0z2yHQWB9sqa1xQHS8Bzfv0" 
     
     func fetchCurrencyRates(completion: @escaping (Result<[String: Double], Error>) -> Void) {
         let urlString = "https://api.freecurrencyapi.com/v1/latest?apikey=\(apiKey)"

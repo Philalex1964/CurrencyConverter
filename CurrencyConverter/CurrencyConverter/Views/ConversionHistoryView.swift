@@ -10,10 +10,6 @@ import SwiftUI
 struct ConversionHistoryView: View {
     @Binding var conversionHistory: [ConversionEntry]
     
-    func clearConversionHistory(history: Binding<[ConversionEntry]>) {
-        history.wrappedValue.removeAll()
-    }
-    
     var body: some View {
         List(conversionHistory) { entry in
             VStack(alignment: .leading) {
@@ -31,9 +27,11 @@ struct ConversionHistoryView: View {
             }
         }
     }
+    
+    func clearConversionHistory(history: Binding<[ConversionEntry]>) {
+        history.wrappedValue.removeAll()
+    }
 }
-
-
 
 struct ConversionHistoryView_Previews: PreviewProvider {
     static var previews: some View {
