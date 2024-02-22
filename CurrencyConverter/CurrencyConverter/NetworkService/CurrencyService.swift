@@ -7,6 +7,10 @@
 
 import Foundation
 
+struct CurrencyResponse: Codable {
+    let data: [String: Double]
+}
+
 class CurrencyService {
     static let shared = CurrencyService()
     private let apiKey = "fca_live_8rxirK8CEbm7c4eyf0z2yHQWB9sqa1xQHS8Bzfv0" 
@@ -36,6 +40,4 @@ class CurrencyService {
     }
 }
     
-struct CurrencyResponse: Codable {
-    let data: [String: Double]
-}
+

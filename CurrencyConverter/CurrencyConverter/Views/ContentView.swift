@@ -19,7 +19,7 @@ struct ContentView: View {
     
     @FocusState private var fieldIsFocused: Bool
     
-    private let currencies: [Currency] = [.rub, .usd, .eur, .gbp, .chf, .cny]
+    //private let currencies: [Currency] = [.rub, .usd, .eur, .gbp, .chf, .cny]
     
     var convertedAmount: Double {
         guard let sourceRate = viewModel.currencyRates[viewModel.selectedSourceCurrency.rawValue],
@@ -36,7 +36,7 @@ struct ContentView: View {
             Form {
                 Section(header: Text("Source")) {
                     Picker("Source Currency", selection: $viewModel.selectedSourceCurrency) {
-                        ForEach(currencies, id:\.self) { currency in
+                        ForEach(viewModel.currencies, id:\.self) { currency in
                             Text(currency.rawValue)
                         }
                     }
@@ -47,7 +47,7 @@ struct ContentView: View {
                 
                 Section(header: Text("Target")) {
                     Picker("Target Currency", selection: $viewModel.selectedTargetCurrency) {
-                        ForEach(currencies, id: \.self) { currency in
+                        ForEach(viewModel.currencies, id: \.self) { currency in
                             Text(currency.rawValue)
                         }
                     }
@@ -59,19 +59,19 @@ struct ContentView: View {
             }
             .navigationBarTitle("Currency Converter")
             .onAppear {
-                loadCachedCurrencyRates()
-                loadConversionHistory()
-                loadSelectedCurrencyPair()
-                startRefreshTimer()
+                viewModel.loadCachedCurrencyRates()
+                viewModel.loadConversionHistory()
+                viewModel.loadSelectedCurrencyPair()
+                viewModel.startRefreshTimer()
             }
             .onChange(of: viewModel.selectedTargetCurrency) { _, _ in
-                saveSelectedCurrencyPairLocally()
+                viewModel.saveSelectedCurrencyPairLocally()
             }
             .onChange(of: viewModel.selectedTargetCurrency) { _, _ in
-                saveSelectedCurrencyPairLocally()
+                viewModel.saveSelectedCurrencyPairLocally()
             }
             .onChange(of: viewModel.conversionHistory) { _, _ in
-                saveConversionHistoryLocally()
+                viewModel.saveConversionHistoryLocally()
             }
             .navigationBarItems(trailing:
                                     NavigationLink(destination: ConversionHistoryView(conversionHistory: $viewModel.conversionHistory)) {
@@ -87,76 +87,76 @@ struct ContentView: View {
         fieldIsFocused = false
     }
     
-    func fetchRates() {
-        CurrencyService.shared.fetchCurrencyRates { result in
-            switch result {
-            case .success(let rates):
-                DispatchQueue.main.async {
-                    viewModel.currencyRates = rates
-                    saveCurrencyRatesLocally()
-                }
-            case .failure(let error):
-                print("Failed to fetch currency rates: \(error)")
-            }
-        }
-    }
+//    func fetchRates() {
+//        CurrencyService.shared.fetchCurrencyRates { result in
+//            switch result {
+//            case .success(let rates):
+//                DispatchQueue.main.async {
+//                    viewModel.currencyRates = rates
+//                    saveCurrencyRatesLocally()
+//                }
+//            case .failure(let error):
+//                print("Failed to fetch currency rates: \(error)")
+//            }
+//        }
+//    }
     
-    func saveCurrencyRatesLocally() {
-        UserDefaults.standard.set(viewModel.currencyRates, forKey: "currencyRates")
-        UserDefaults.standard.set(Date(), forKey: "cachedRatesTimestamp")
-    }
+//    func saveCurrencyRatesLocally() {
+//        UserDefaults.standard.set(viewModel.currencyRates, forKey: "currencyRates")
+//        UserDefaults.standard.set(Date(), forKey: "cachedRatesTimestamp")
+//    }
     
-    func loadSelectedCurrencyPair() {
-        if let sourceCurrencyRawValue = UserDefaults.standard.string(forKey: "sourceCurrency"),
-           let sourceCurrency = Currency(rawValue: sourceCurrencyRawValue),
-           let targetCurrencyRawValue = UserDefaults.standard.string(forKey: "targetCurrency"),
-           let targetCurrency = Currency(rawValue: targetCurrencyRawValue) {
-            viewModel.selectedSourceCurrency = sourceCurrency
-            viewModel.selectedTargetCurrency = targetCurrency
-        }
-    }
+//    func loadSelectedCurrencyPair() {
+//        if let sourceCurrencyRawValue = UserDefaults.standard.string(forKey: "sourceCurrency"),
+//           let sourceCurrency = Currency(rawValue: sourceCurrencyRawValue),
+//           let targetCurrencyRawValue = UserDefaults.standard.string(forKey: "targetCurrency"),
+//           let targetCurrency = Currency(rawValue: targetCurrencyRawValue) {
+//            viewModel.selectedSourceCurrency = sourceCurrency
+//            viewModel.selectedTargetCurrency = targetCurrency
+//        }
+//    }
     
-    func saveSelectedCurrencyPairLocally() {
-        UserDefaults.standard.set(viewModel.selectedSourceCurrency.rawValue, forKey: "sourceCurrency")
-        UserDefaults.standard.set(viewModel.selectedTargetCurrency.rawValue, forKey: "targetCurrency")
-    }
+//    func saveSelectedCurrencyPairLocally() {
+//        UserDefaults.standard.set(viewModel.selectedSourceCurrency.rawValue, forKey: "sourceCurrency")
+//        UserDefaults.standard.set(viewModel.selectedTargetCurrency.rawValue, forKey: "targetCurrency")
+//    }
     
 //MARK: - PRIVATE
     
-    private func startRefreshTimer() {
-        viewModel.timer = Timer.scheduledTimer(withTimeInterval: 21600, repeats: true) { _ in
-            fetchRates()
-        }
-    }
+//    private func startRefreshTimer() {
+//        viewModel.timer = Timer.scheduledTimer(withTimeInterval: 21600, repeats: true) { _ in
+//            viewModel.fetchRates()
+//        }
+//    }
     
 //    private func stopRefreshTimer() {
 //        timer?.invalidate()
 //        timer = nil
 //    }
     
-    private func loadCachedCurrencyRates() {
-        if let cachedRates = UserDefaults.standard.dictionary(forKey: "currencyRates") as? [String: Double] {
-            viewModel.currencyRates = cachedRates
-        } else {
-            fetchRates()
-        }
-    }
+//    private func loadCachedCurrencyRates() {
+//        if let cachedRates = UserDefaults.standard.dictionary(forKey: "currencyRates") as? [String: Double] {
+//            viewModel.currencyRates = cachedRates
+//        } else {
+//            viewModel.fetchRates()
+//        }
+//    }
     
-    private func saveConversionHistoryLocally() {
-        let encoder = JSONEncoder()
-        if let encodedHistory = try? encoder.encode(viewModel.conversionHistory) {
-            UserDefaults.standard.set(encodedHistory, forKey: "conversionHistory")
-        }
-    }
+//    private func saveConversionHistoryLocally() {
+//        let encoder = JSONEncoder()
+//        if let encodedHistory = try? encoder.encode(viewModel.conversionHistory) {
+//            UserDefaults.standard.set(encodedHistory, forKey: "conversionHistory")
+//        }
+//    }
     
-    private func loadConversionHistory() {
-        if let savedHistoryData = UserDefaults.standard.data(forKey: "conversionHistory") {
-            let decoder = JSONDecoder()
-            if let loadedHistory = try? decoder.decode([ConversionEntry].self, from: savedHistoryData) {
-                viewModel.conversionHistory = loadedHistory
-            }
-        }
-    }
+//    private func loadConversionHistory() {
+//        if let savedHistoryData = UserDefaults.standard.data(forKey: "conversionHistory") {
+//            let decoder = JSONDecoder()
+//            if let loadedHistory = try? decoder.decode([ConversionEntry].self, from: savedHistoryData) {
+//                viewModel.conversionHistory = loadedHistory
+//            }
+//        }
+//    }
 }
 
 #Preview {
