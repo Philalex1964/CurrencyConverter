@@ -60,6 +60,12 @@ struct ContentView: View {
                 fetchRates()
                 loadSelectedCurrencyPair()
             }
+            .onChange(of: selectedTargetCurrency) { _, _ in
+                saveSelectedCurrencyPairLocally()
+            }
+            .onChange(of: selectedTargetCurrency) { _, _ in
+                saveSelectedCurrencyPairLocally()
+            }
             .navigationBarItems(trailing:
                                     NavigationLink(destination: ConversionHistoryView(conversionHistory: $conversionHistory)) {
                 Text("History")
