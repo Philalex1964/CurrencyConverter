@@ -9,13 +9,20 @@ import SwiftUI
 
 struct ConversionHistoryView: View {
     @Binding var conversionHistory: [ConversionEntry]
+    @State private var searchText = ""
     
     var body: some View {
-        List(conversionHistory) { entry in
-            VStack(alignment: .leading) {
-                Text("\(entry.sourceAmount, specifier: "%.2f") \(entry.sourceCurrency.rawValue) → \(entry.convertedAmount, specifier: "%.2f") \(entry.targetCurrency.rawValue)")
-                Text(entry.timestamp, style: .date)
-                    .foregroundColor(.secondary)
+        VStack {
+            TextField("Search by currency", text: $searchText)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            
+            List(filteredHistory) { entry in
+                VStack(alignment: .leading) {
+                    Text("\(entry.sourceAmount, specifier: "%.2f") \(entry.sourceCurrency.rawValue) → \(entry.convertedAmount, specifier: "%.2f") \(entry.targetCurrency.rawValue)")
+                    Text(entry.timestamp, style: .date)
+                        .foregroundColor(.secondary)
+                }
             }
         }
         .navigationBarTitle("Conversion History")
@@ -28,6 +35,19 @@ struct ConversionHistoryView: View {
         }
     }
     
+    private var filteredHistory: [ConversionEntry] {
+        if searchText.isEmpty {
+            return conversionHistory
+        } else {
+            let lowercaseSearchText = searchText.lowercased()
+            return conversionHistory.filter { entry in
+                let sourceCurrencyMatch = entry.sourceCurrency.rawValue.lowercased().contains(lowercaseSearchText)
+                let targetCurrencyMatch = entry.targetCurrency.rawValue.lowercased().contains(lowercaseSearchText)
+                return sourceCurrencyMatch || targetCurrencyMatch
+            }
+        }
+    }
+    
     func clearConversionHistory(history: Binding<[ConversionEntry]>) {
         history.wrappedValue.removeAll()
     }
@@ -36,7 +56,7 @@ struct ConversionHistoryView: View {
 struct ConversionHistoryView_Previews: PreviewProvider {
     static var previews: some View {
         let conversionHistory: [ConversionEntry] = []
-               return ConversionHistoryView(conversionHistory: .constant(conversionHistory))
+        return ConversionHistoryView(conversionHistory: .constant(conversionHistory))
     }
 }
 

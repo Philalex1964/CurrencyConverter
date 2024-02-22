@@ -79,7 +79,6 @@ struct ContentView: View {
             })
         }
     }
-
     
     func addToHistory() {
         let entry = ConversionEntry(sourceCurrency: selectedSourceCurrency, targetCurrency: selectedTargetCurrency, sourceAmount: Double(sourceAmount) ?? 0, convertedAmount: convertedAmount, timestamp: Date())
