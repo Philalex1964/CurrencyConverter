@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ConversionEntry: Identifiable {
+struct ConversionEntry: Identifiable, Codable, Equatable {
     let id = UUID()
     let sourceCurrency: Currency
     let targetCurrency: Currency

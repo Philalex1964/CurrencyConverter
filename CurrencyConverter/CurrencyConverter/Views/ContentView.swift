@@ -60,6 +60,7 @@ struct ContentView: View {
             .navigationBarTitle("Currency Converter")
             .onAppear {
                 loadCachedCurrencyRates()
+                loadConversionHistory()
                 loadSelectedCurrencyPair()
                 startRefreshTimer()
             }
@@ -69,31 +70,16 @@ struct ContentView: View {
             .onChange(of: selectedTargetCurrency) { _, _ in
                 saveSelectedCurrencyPairLocally()
             }
+            .onChange(of: conversionHistory) { _, _ in
+                saveConversionHistoryLocally()
+            }
             .navigationBarItems(trailing:
                                     NavigationLink(destination: ConversionHistoryView(conversionHistory: $conversionHistory)) {
                 Text("History")
             })
         }
     }
-    
-    private func startRefreshTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 21600, repeats: true) { _ in
-            fetchRates()
-        }
-    }
-    
-//    private func stopRefreshTimer() {
-//        timer?.invalidate()
-//        timer = nil
-//    }
-    
-    private func loadCachedCurrencyRates() {
-        if let cachedRates = UserDefaults.standard.dictionary(forKey: "currencyRates") as? [String: Double] {
-            self.currencyRates = cachedRates
-        } else {
-            fetchRates()
-        }
-    }
+
     
     func addToHistory() {
         let entry = ConversionEntry(sourceCurrency: selectedSourceCurrency, targetCurrency: selectedTargetCurrency, sourceAmount: Double(sourceAmount) ?? 0, convertedAmount: convertedAmount, timestamp: Date())
@@ -134,6 +120,43 @@ struct ContentView: View {
     func saveSelectedCurrencyPairLocally() {
         UserDefaults.standard.set(selectedSourceCurrency.rawValue, forKey: "sourceCurrency")
         UserDefaults.standard.set(selectedTargetCurrency.rawValue, forKey: "targetCurrency")
+    }
+    
+//MARK: - PRIVATE
+    
+    private func startRefreshTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 21600, repeats: true) { _ in
+            fetchRates()
+        }
+    }
+    
+//    private func stopRefreshTimer() {
+//        timer?.invalidate()
+//        timer = nil
+//    }
+    
+    private func loadCachedCurrencyRates() {
+        if let cachedRates = UserDefaults.standard.dictionary(forKey: "currencyRates") as? [String: Double] {
+            self.currencyRates = cachedRates
+        } else {
+            fetchRates()
+        }
+    }
+    
+    private func saveConversionHistoryLocally() {
+        let encoder = JSONEncoder()
+        if let encodedHistory = try? encoder.encode(conversionHistory) {
+            UserDefaults.standard.set(encodedHistory, forKey: "conversionHistory")
+        }
+    }
+    
+    private func loadConversionHistory() {
+        if let savedHistoryData = UserDefaults.standard.data(forKey: "conversionHistory") {
+            let decoder = JSONDecoder()
+            if let loadedHistory = try? decoder.decode([ConversionEntry].self, from: savedHistoryData) {
+                self.conversionHistory = loadedHistory
+            }
+        }
     }
 }
 
